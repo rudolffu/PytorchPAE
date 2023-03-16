@@ -27,21 +27,35 @@ def get_data(data, loc, batchsize, valid_batchsize, transforms, name=None):
     if data in dir(datasets):
         dataset = getattr(datasets,data)
     
-        training_data = dataset(root=loc,split='train',download=True,transform=transforms)
+        training_data = dataset(root=loc,
+                                # split='train',
+                                train=True,
+                                download=True,transform=transforms)
 
-        valid_data    = dataset(root=loc,split='valid',download=True,transform=transforms)
+        valid_data    = dataset(root=loc,
+                                # split='valid',
+                                download=True,transform=transforms)
         
-        test_data    = dataset(root=loc,split='test',download=True,transform=transforms)
+        test_data    = dataset(root=loc,
+                            #    split='test',
+                               download=True,transform=transforms)
 
         
     elif data in dir(cd):
         dataset       = getattr(cd,data)
         
-        training_data = dataset(root_dir=loc,split='train',transform=transforms, name=name)
+        training_data = dataset(root_dir=loc,
+                                # split='train',
+                                train=True,
+                                transform=transforms, name=name)
 
-        valid_data    = dataset(root_dir=loc,split='valid',transform=transforms, name=name)
+        valid_data    = dataset(root_dir=loc,
+                                # split='valid',
+                                transform=transforms, name=name)
         
-        test_data    = dataset(root_dir=loc,split='test',transform=transforms, name=name)
+        test_data    = dataset(root_dir=loc,
+                            #    split='test',
+                               transform=transforms, name=name)
     else:
         raise Exception(f'Dataset {data:s} not supported at this time')
     

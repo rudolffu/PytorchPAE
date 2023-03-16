@@ -121,8 +121,9 @@ class ConvEncoder(nn.Module):
         self.final_dim = current_dim
         self.final_c   = current_channels
         
-        self.model.append(nn.Flatten())
+        # self.model.append(nn.Flatten())
         current_shape = current_channels*current_dim**self.N
+        self.model.append(utils.Reshape((-1, current_shape)))
         linear        = nn.Linear(current_shape,params['latent_dim'])
         self.model.append(spec_norm(linear))
         
