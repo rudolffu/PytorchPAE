@@ -103,6 +103,49 @@ class SDSS_DR16(Dataset):
 #             sample = self.transform(sample['features'])
        
 #         return sample
+
+
+class FelobalDataset(Dataset):
+    """FeLoBAL spectrum dataset."""
+
+    def __init__(self, csv_file, root_dir, transform=None):
+        """
+        Args:
+            root_dir (string): Directory with all the specs.
+            transform (callable, optional): Optional transform to be applied
+                on a sample.
+        """
+        self.label_frame = pd.read_csv(csv_file)
+        self.label_frame['Label'] = self.label_frame['Label'].astype('category')
+        self.label_frame['LabelCode'] = self.label_frame["Label"].cat.codes
+        self.root_dir = root_dir
+#         self.flist = glob(self.root_dir+'*fits')
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.label_frame)
+
+    def __getitem__(self, idx):
+        if torch.is_tensor(idx):
+            idx = idx.tolist()# 判断idx是否是张量，若是，将矩阵和数组转化为列表
+
+        spec_name = self.root_dir + self.label_frame.loc[idx, 'Filename']
+        hdu = fits.open(spec_name)
+        try:
+            flux = hdu[1].data['FLUX']
+        except:
+            flux = hdu[0].data[0]
+#         spec_name = os.path.basename(self.flist[idx])
+#         spec = SdssSpec(spec_name) 
+#         image = io.imread(img_name)
+        label = self.label_frame.loc[idx, 'LabelCode']
+#         landmarks = np.array([landmarks])
+#         landmarks = landmarks.astype('float').reshape(-1, 2)
+        sample = {'flux':flux, 'label':label}
+        if self.transform:
+            sample = self.transform(sample)
+
+        return sample
     
 
 class AE1_encoded_spectra(Dataset):
