@@ -190,6 +190,7 @@ class Autoencoder(nn.Module):
                     features  = data['features'].to(self.device).float()
                 else:
                     features  = data[0].to(self.device)
+                features = features.view(-1, 1, features.shape[1])
                 recon = self.forward(features)
 
                 if self.epoch<self.ann_epoch:
@@ -213,6 +214,7 @@ class Autoencoder(nn.Module):
                 features  = valid_data['features'].to(self.device).float()
             else:
                 features  = valid_data[0].to(self.device)
+            features = features.view(-1, 1, features.shape[1])
             with torch.no_grad():
                 recon      = self.forward(features)
                 if self.epoch<self.ann_epoch:
