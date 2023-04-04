@@ -5,6 +5,8 @@ from torchvision.transforms import ToTensor
 import numpy as np
 import pickle
 import os
+import pandas as pd
+from astropy.io import fits
 
 class SDSS_DR16(Dataset):
     """De-redshifted and downsampled spectra from SDSS-BOSS DR16"""
@@ -105,44 +107,35 @@ class SDSS_DR16(Dataset):
 #         return sample
 
 
-class FelobalDataset(Dataset):
+class FelobalSimple(Dataset):
     """FeLoBAL spectrum dataset."""
-
-    def __init__(self, csv_file, root_dir, transform=None):
+    def __init__(self, root_dir='Datasets/', transform=True, train=True, name=None):
         """
         Args:
-            root_dir (string): Directory with all the specs.
+            root_dir (string): Directory of data file
             transform (callable, optional): Optional transform to be applied
                 on a sample.
         """
-        self.label_frame = pd.read_csv(csv_file)
-        self.label_frame['Label'] = self.label_frame['Label'].astype('category')
-        self.label_frame['LabelCode'] = self.label_frame["Label"].cat.codes
-        self.root_dir = root_dir
-#         self.flist = glob(self.root_dir+'*fits')
-        self.transform = transform
+
+        if train:
+            self.df = pd.read_csv(os.path.join(root_dir,'train_v3_fnorm.csv'))
+        else:
+            self.df = pd.read_csv(os.path.join(root_dir,'test_v3_fnorm.csv'))
+        self.data = self.df[:,pd.Index(np.arange(3522))].values
+        self.mean = torch.mean(self.data)
+        self.std  = torch.std(self.data)
+
 
     def __len__(self):
-        return len(self.label_frame)
+        return len(self.data)
 
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
-            idx = idx.tolist()# 判断idx是否是张量，若是，将矩阵和数组转化为列表
+            idx = idx.tolist()
 
-        spec_name = self.root_dir + self.label_frame.loc[idx, 'Filename']
-        hdu = fits.open(spec_name)
-        try:
-            flux = hdu[1].data['FLUX']
-        except:
-            flux = hdu[0].data[0]
-#         spec_name = os.path.basename(self.flist[idx])
-#         spec = SdssSpec(spec_name) 
-#         image = io.imread(img_name)
-        label = self.label_frame.loc[idx, 'LabelCode']
-#         landmarks = np.array([landmarks])
-#         landmarks = landmarks.astype('float').reshape(-1, 2)
-        sample = {'flux':flux, 'label':label}
-        if self.transform:
+        sample = (self.data[idx]-self.mean)/self.std
+        
+        if self.transform != None:
             sample = self.transform(sample)
 
         return sample
