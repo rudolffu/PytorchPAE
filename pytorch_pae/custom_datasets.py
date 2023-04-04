@@ -109,7 +109,7 @@ class SDSS_DR16(Dataset):
 
 class FelobalSimple(Dataset):
     """FeLoBAL spectrum dataset."""
-    def __init__(self, root_dir='Datasets/', transform=True, train=True, name=None):
+    def __init__(self, root_dir='Datasets/', transform=None, train=True, name=None):
         """
         Args:
             root_dir (string): Directory of data file
@@ -121,9 +121,10 @@ class FelobalSimple(Dataset):
             self.df = pd.read_csv(os.path.join(root_dir,'train_v3_fnorm.csv'))
         else:
             self.df = pd.read_csv(os.path.join(root_dir,'test_v3_fnorm.csv'))
-        self.data = self.df[:,pd.Index(np.arange(3522))].values
-        self.mean = torch.mean(self.data)
-        self.std  = torch.std(self.data)
+        self.data = self.df.values[:,0:3522].astype(np.float32)
+        self.mean = np.mean(self.data)
+        self.std  = np.std(self.data)
+        self.transform = transform
 
 
     def __len__(self):
