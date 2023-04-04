@@ -116,28 +116,33 @@ class FelobalSimple(Dataset):
             transform (callable, optional): Optional transform to be applied
                 on a sample.
         """
-
+        self.data = OrderedDict()
         if train:
             self.df = pd.read_csv(os.path.join(root_dir,'train_v3_fnorm.csv'))
         else:
             self.df = pd.read_csv(os.path.join(root_dir,'test_v3_fnorm.csv'))
-        self.data = self.df.values[:,0:3522].astype(np.float32)
-        self.mean = np.mean(self.data)
-        self.std  = np.std(self.data)
+        self.data['features'] = self.df.values[:,0:3522].astype(np.float)
+        self.df['Label'] = self.df['Label'].astype('category')
+        self.df['LabelCode'] = self.df["Label"].cat.codes
+        self.data['labels']   = self.df['LabelCode'].values
+        self.data['z']        = self.df['redshift'].values
+        self.length           = len(self.data['features'])
+        self.mean = np.mean(self.data['features'])
+        self.std  = np.std(self.data['features'])
         self.transform = transform
 
 
     def __len__(self):
-        return len(self.data)
+        return self.length
 
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
-        sample = (self.data[idx]-self.mean)/self.std
+        sample = {key: torch.as_tensor(self.data[key][idx]).float() for key in ['features', 'labels', 'z']}
         
         if self.transform != None:
-            sample = self.transform(sample)
+            sample = self.transform(sample['features'])
 
         return sample
     
